@@ -1,0 +1,31 @@
+##TITLE=Dimethylamine
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##ORIGIN=NIST Mass Spectrometry Data Center, 1998.
+##OWNER=NIST Mass Spectrometry Data Center
+Collection (C) 2014 copyright by the U.S. Secretary of Commerce
+on behalf of the United States of America. All rights reserved.
+##CAS REGISTRY NO=124-40-3
+##$NIST MASS SPEC NO=291481
+##MOLFORM=C2 H7 N
+##MW=45
+##$NIST SOURCE=MSDC
+##XUNITS=M/Z
+##YUNITS=RELATIVE INTENSITY
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=13
+##LASTX=46
+##FIRSTY=10
+##MAXX=46
+##MINX=13
+##MAXY=9999
+##MINY=10
+##NPOINTS=18
+##PEAK TABLE=(XY..XY)
+13,10 14,60 15,220 16,10
+26,20 27,280 28,3140 29,10
+30,530 38,130 39,200 40,530
+41,460 42,1890 43,1390 44,9999
+45,6279 46,180
+##END=

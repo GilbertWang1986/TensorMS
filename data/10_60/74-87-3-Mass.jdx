@@ -1,0 +1,29 @@
+##TITLE=Chloromethane
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##OWNER=NIST Mass Spectrometry Data Center
+Collection (C) 2014 copyright by the U.S. Secretary of Commerce
+on behalf of the United States of America. All rights reserved.
+##CAS REGISTRY NO=74-87-3
+##$NIST MASS SPEC NO=18894
+##MOLFORM=C H3 Cl
+##MW=50
+##$NIST SOURCE=MSDC
+##XUNITS=M/Z
+##YUNITS=RELATIVE INTENSITY
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=12
+##LASTX=52
+##FIRSTY=330
+##MAXX=52
+##MINX=12
+##MAXY=9999
+##MINY=100
+##NPOINTS=14
+##PEAK TABLE=(XY..XY)
+12,330 13,540 14,841 15,7237
+16,100 35,621 36,160 37,190
+47,711 48,340 49,1141 50,9999
+51,380 52,3103
+##END=

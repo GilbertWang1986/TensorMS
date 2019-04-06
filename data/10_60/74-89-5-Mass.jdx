@@ -1,0 +1,30 @@
+##TITLE=Methylamine
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##ORIGIN=Japan AIST/NIMC Database- Spectrum MS-NW- 377
+##OWNER=NIST Mass Spectrometry Data Center
+Collection (C) 2014 copyright by the U.S. Secretary of Commerce
+on behalf of the United States of America. All rights reserved.
+##CAS REGISTRY NO=74-89-5
+##$NIST MASS SPEC NO=228024
+##MOLFORM=C H5 N
+##MW=31
+##$NIST SOURCE=MSDC
+##XUNITS=M/Z
+##YUNITS=RELATIVE INTENSITY
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=13
+##LASTX=32
+##FIRSTY=20
+##MAXX=32
+##MINX=13
+##MAXY=9999
+##MINY=20
+##NPOINTS=13
+##PEAK TABLE=(XY..XY)
+13,20 14,40 15,409 16,40
+17,80 18,119 26,90 27,829
+28,5389 29,1239 30,9999 31,6559
+32,90
+##END=

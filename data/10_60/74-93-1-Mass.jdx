@@ -1,0 +1,29 @@
+##TITLE=Methanethiol
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##OWNER=NIST Mass Spectrometry Data Center
+Collection (C) 2014 copyright by the U.S. Secretary of Commerce
+on behalf of the United States of America. All rights reserved.
+##CAS REGISTRY NO=74-93-1
+##$NIST MASS SPEC NO=86
+##MOLFORM=C H4 S
+##MW=48
+##$NIST SOURCE=MSDC
+##XUNITS=M/Z
+##YUNITS=RELATIVE INTENSITY
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=12
+##LASTX=50
+##FIRSTY=120
+##MAXX=50
+##MINX=12
+##MAXY=9999
+##MINY=30
+##NPOINTS=15
+##PEAK TABLE=(XY..XY)
+12,120 13,210 14,380 15,961
+32,390 33,510 34,110 35,30
+44,741 45,4744 46,1151 47,9999
+48,8998 49,611 50,410
+##END=

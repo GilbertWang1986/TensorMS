@@ -1,0 +1,31 @@
+##TITLE=Formamide
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##ORIGIN=Japan AIST/NIMC Database- Spectrum MS-NW- 540
+##OWNER=NIST Mass Spectrometry Data Center
+Collection (C) 2014 copyright by the U.S. Secretary of Commerce
+on behalf of the United States of America. All rights reserved.
+##CAS REGISTRY NO=75-12-7
+##$NIST MASS SPEC NO=228023
+##MOLFORM=C H3 N O
+##MW=45
+##$NIST SOURCE=MSDC
+##XUNITS=M/Z
+##YUNITS=RELATIVE INTENSITY
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=12
+##LASTX=47
+##FIRSTY=30
+##MAXX=47
+##MINX=12
+##MAXY=9999
+##MINY=20
+##NPOINTS=18
+##PEAK TABLE=(XY..XY)
+12,30 13,20 14,50 15,109
+16,1219 17,3259 18,679 26,129
+27,749 28,629 29,3429 30,60
+42,189 43,1089 44,2489 45,9999
+46,169 47,20
+##END=
