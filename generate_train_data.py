@@ -104,7 +104,7 @@ if __name__ == '__main__':
 
 
     n_specs = 1
-    N = 200
+    N = 5000
     for i in range(N):
         x, y, label = generator_train_data(specs, cas_ns, n_specs)
         data = {}
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
 
     n_specs = 2
-    N = 300
+    N = 15000
     for i in range(N):
         x, y, label = generator_train_data(specs, cas_ns, n_specs)
         data = {}
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
 
     n_specs = 3
-    N = 300
+    N = 15000
     for i in range(N):
         x, y, label = generator_train_data(specs, cas_ns, n_specs)
         data = {}
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
 
     n_specs = 4
-    N = 100
+    N = 5000
     for i in range(N):
         x, y, label = generator_train_data(specs, cas_ns, n_specs)
         data = {}
