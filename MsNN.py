@@ -8,30 +8,81 @@ import random
 import numpy as np
 import tensorflow as tf
 from sklearn.decomposition import PCA
+from sklearn.externals import joblib
 
 
 
 class MsNN():
     def __init__( self, name, target,
-                  data_root_dir, ratio_of_test, 
-                  use_PCA, n_components, 
-                  n_hidden_layers, keep, learning_rate, nproc):
+                  use_PCA, n_components, pca_model_path,
+                  n_hidden_layers, nproc):
         
         self.name = name
         self.target = target
         self.use_PCA = use_PCA
-        self.keep = keep
-        
+        self.n_components = n_components
+        self.pca_model_path = pca_model_path 
+        self.pca = None
 
+
+        # construct NN
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            # data entry
+            self.xs        = tf.placeholder(tf.float32, [None,  n_components])
+            self.ys        = tf.placeholder(tf.float32, [None,             2])
+            self.keep_prob = tf.placeholder(tf.float32)
+            self.lr_prob   = tf.placeholder(tf.float32)  # learning rate
+
+            # hidden layers
+            self.hidden_layers = []
+            self.hidden_layers.append( tf.nn.dropout(self.add_layer(self.xs, n_components, n_hidden_layers[0],
+                                                                    activation_function=tf.nn.relu),
+                                                     self.keep_prob) 
+                                     )
+            for i in range(len(n_hidden_layers)-1):
+                self.hidden_layers.append( tf.nn.dropout(self.add_layer(self.hidden_layers[i], n_hidden_layers[i], n_hidden_layers[i+1],
+                                                                        activation_function=tf.nn.relu),
+                                                         self.keep_prob)
+                                         )
+
+            # output layer
+            self.prediction = self.add_layer(self.hidden_layers[-1], n_hidden_layers[-1], 2, activation_function=tf.nn.softmax)
+
+            # loss: cross entropy
+            self.loss = -tf.reduce_sum( self.ys*tf.log(self.prediction) )
+
+            # training
+            self.train_step = tf.train.AdamOptimizer(self.lr_prob).minimize(self.loss)
+
+            # save and restore trained model
+            self.saver = tf.train.Saver(max_to_keep=1000)
+
+            # initiation
+            config = tf.ConfigProto( device_count={"CPU": nproc},
+                                     inter_op_parallelism_threads = 1,   
+                                     intra_op_parallelism_threads = 1,  
+                                     log_device_placement=True )  
+            self.sess = tf.Session(graph=self.graph, config=config)
+            self.sess.run(tf.global_variables_initializer())
+
+
+
+
+    def load_data(self, data_root_dir, ratio_of_test, balance=True):
         # divide the data set 
         fnames = os.listdir(data_root_dir)
         random.shuffle(fnames)
-        target_list = [self.is_target(data_root_dir+fname) for fname in fnames]
-        fname_positive = [fname for idx, fname in enumerate(fnames) 
-                          if target_list[idx]]
-        fname_negative = [fname for idx, fname in enumerate(fnames) 
-                          if not target_list[idx]][:len(fname_positive)]
-        data_fname = fname_positive + fname_negative
+        
+        if balance == True:
+            target_list = [self.is_target(data_root_dir+fname) for fname in fnames]
+            fname_positive = [fname for idx, fname in enumerate(fnames) 
+                              if target_list[idx]]
+            fname_negative = [fname for idx, fname in enumerate(fnames) 
+                              if not target_list[idx]][:len(fname_positive)]
+            data_fname = fname_positive + fname_negative
+        else:
+            data_fname = fnames
 
         num_test_data = int( len(data_fname)*ratio_of_test )
         test_data_fname  = data_fname[:num_test_data]
@@ -56,70 +107,63 @@ class MsNN():
             self.test_spec  =  np.vstack( (self.test_spec, spec) )
             self.test_label =  np.vstack( (self.test_label, label) )
 
-
+        
         # PCA
         if self.use_PCA:
-            self.pca = PCA(n_components=n_components, copy=True, whiten=False)
-            self.pca.fit(self.train_spec)
+            if self.pca == None:
+                try:
+                    self.load_pca_model(self.pca_model_path)
+                except:
+                    self.pca_fit(data=self.train_spec, pca_model_path=self.pca_model_path)
+
             self.train_spec = self.pca.transform(self.train_spec)
             self.test_spec  = self.pca.transform(self.test_spec)
 
 
-        # construct NN
-        self.graph = tf.Graph()
-        with self.graph.as_default():
-            # data entry
-            self.xs        = tf.placeholder(tf.float32, [None,  n_components])
-            self.ys        = tf.placeholder(tf.float32, [None,             2])
-            self.keep_prob = tf.placeholder(tf.float32)
 
-            # hidden layers
-            self.hidden_layers = []
-            self.hidden_layers.append( tf.nn.dropout(self.add_layer(self.xs, n_components, n_hidden_layers[0],
-                                                                    activation_function=tf.nn.relu),
-                                                     self.keep_prob) 
-                                     )
-            for i in range(len(n_hidden_layers)-1):
-                self.hidden_layers.append( tf.nn.dropout(self.add_layer(self.hidden_layers[i], n_hidden_layers[i], n_hidden_layers[i+1],
-                                                                        activation_function=tf.nn.relu),
-                                                         self.keep_prob)
-                                         )
 
-            # output layer
-            self.prediction = self.add_layer(self.hidden_layers[-1], n_hidden_layers[-1], 2, activation_function=tf.nn.softmax)
+    def pca_fit(self, data, pca_model_path=None):
 
-            # loss: cross entropy
-            self.loss = -tf.reduce_sum( self.ys*tf.log(self.prediction) )
+        self.pca = PCA(n_components=self.n_components, copy=True, whiten=False)
+        self.pca.fit(data)
 
-            # training
-            self.train_step = tf.train.AdamOptimizer(learning_rate).minimize(self.loss)
-
-            # save and restore trained model
-            self.saver = tf.train.Saver(max_to_keep=1000)
-
-            # initiation
-            config = tf.ConfigProto( device_count={"CPU": nproc},
-                                     inter_op_parallelism_threads = 1,   
-                                     intra_op_parallelism_threads = 1,  
-                                     log_device_placement=True )  
-            self.sess = tf.Session(graph=self.graph, config=config)
-            self.sess.run(tf.global_variables_initializer())
+        if not pca_model_path == None:
+            joblib.dump(self.pca, pca_model_path)
 
 
 
 
-    def train(self, loss_min, step_max=None, model_path=None):
+    def load_pca_model(self, pca_model_path):
+        self.pca = joblib.load(pca_model_path)
+
+
+
+
+
+    def train(self, loss_min, learning_rate, keep, step_max=None, model_path=None):
            
         counter = 0
         while True:
 
             self.sess.run(self.train_step, 
-                          feed_dict={self.xs:self.train_spec, self.ys:self.train_label, self.keep_prob:self.keep})
+                          feed_dict={ self.xs:        self.train_spec, 
+                                      self.ys:        self.train_label,
+                                      self.lr_prob:   learning_rate,
+                                      self.keep_prob: keep}
+                          )
+            
             if counter%100 == 0:
                 train_loss = self.sess.run(self.loss, 
-                             feed_dict={self.xs:self.train_spec, self.ys:self.train_label, self.keep_prob:1.0})
+                                           feed_dict={ self.xs:        self.train_spec, 
+                                                       self.ys:        self.train_label, 
+                                                       self.keep_prob: 1.0}
+                                           )
                 test_loss  = self.sess.run(self.loss, 
-                             feed_dict={self.xs:self.test_spec,  self.ys:self.test_label, self.keep_prob:1.0})
+                                           feed_dict={ self.xs:        self.test_spec,  
+                                                       self.ys:        self.test_label, 
+                                                       self.keep_prob: 1.0}
+                                           )
+                
                 print( '%-10d   Train Loss=%-12.6f  Test Loss=%-12.6f'
                        %(counter, train_loss, test_loss) )
             
@@ -134,7 +178,7 @@ class MsNN():
             counter = counter+1
 
         # save trained model 
-        if not model_path is None:
+        if not model_path == None:
             self.saver.save(self.sess, model_path)
     
         print('Training is stopped')
@@ -143,13 +187,13 @@ class MsNN():
 
 
 
-    def load(self, model_path):
+    def load_model(self, model_path):
         self.saver.restore(self.sess, model_path)
 
 
 
 
-    def save(self, model_path):
+    def save_model(self, model_path):
         self.saver.save(self.sess, model_path)
 
 
@@ -157,8 +201,9 @@ class MsNN():
 
     def validate(self):
         predictions = self.sess.run( self.prediction, 
-                                     feed_dict={self.xs:self.test_spec, 
-                                                self.keep_prob:1.0})
+                                     feed_dict={ self.xs:        self.test_spec, 
+                                                 self.keep_prob: 1.0 }
+                                    )
         predictions = [i[0]>i[1] for i in predictions]
         labels = [i[0]>i[1] for i in self.test_label]
 
@@ -166,7 +211,17 @@ class MsNN():
                              if predictions[idx] == labels[idx]]
 
         return len(right_predictions)/len(predictions)
-        
+
+
+
+
+    def predict(self, spec):
+        spec = self.pca.transform(spec)
+        predictions = self.sess.run( self.prediction, 
+                                     feed_dict={ self.xs:  spec, 
+                                                 self.keep_prob: 1.0 }
+                                   )        
+
 
 
 
@@ -226,23 +281,29 @@ if __name__ == '__main__':
 
     nn_107_02_8 = MsNN( name = '107-02-8', 
                         target = '107-02-8',
-                        data_root_dir = 'train_data/', 
-                        ratio_of_test = 0.2, 
                         use_PCA = True, 
-                        n_components = 128, 
+                        n_components = 128,
+                        pca_model_path = 'pca_107_02_8.model',
                         n_hidden_layers = [64, 64, 64], 
-                        keep = 1.0, 
-                        learning_rate = 0.01, 
-                        nproc = 1)
+                        nproc = 3)
+
+    nn_107_02_8.load_model(model_path='./MSNN_19')
+    nn_107_02_8.load_pca_model('pca_107_02_8.model')
+
+    nn_107_02_8.load_data( data_root_dir = 'train_data/', 
+                           ratio_of_test = 0.2 )
+    print( nn_107_02_8.validate() )
 
 
-    # nn_107_02_8.train(loss_min=0, step_max=100, model_path='./MSNN')
-    # nn_107_02_8.load(model_path='./MSNN')
+    # for i in range(10):
+    #     nn_107_02_8.train(loss_min=0, learning_rate=0.01, keep=0.6, step_max=500, model_path='./MSNN_%d'%(i))
+    #     print( nn_107_02_8.validate() )
 
+    # nn_107_02_8.load_model(model_path='./MSNN')
+    # print( nn_107_02_8.validate() )
 
-    for i in range(10000):
-        nn_107_02_8.train(loss_min=0, step_max=100, model_path='./MSNN')
-        print( nn_107_02_8.validate() )
+    
+
 
 
 
