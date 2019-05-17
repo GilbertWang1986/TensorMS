@@ -14,15 +14,15 @@ from sklearn.externals import joblib
 
 class MsNN():
     def __init__( self, name, target,
-                  use_PCA, n_components, pca_model_path,
+                  use_PCA, n_components, pca_model_path, train_pca,
                   n_hidden_layers, nproc):
         
         self.name = name
         self.target = target
         self.use_PCA = use_PCA
         self.n_components = n_components
-        self.pca_model_path = pca_model_path 
-        self.pca = None
+        self.pca_model_path = pca_model_path
+        self.train_pca = train_pca
 
 
         # construct NN
@@ -110,11 +110,10 @@ class MsNN():
         
         # PCA
         if self.use_PCA:
-            if self.pca == None:
-                try:
-                    self.load_pca_model(self.pca_model_path)
-                except:
-                    self.pca_fit(data=self.train_spec, pca_model_path=self.pca_model_path)
+            if self.train_pca:
+            	self.pca_fit(data=self.train_spec, pca_model_path=self.pca_model_path)
+            else:
+                self.load_pca_model(self.pca_model_path)
 
             self.train_spec = self.pca.transform(self.train_spec)
             self.test_spec  = self.pca.transform(self.test_spec)
@@ -122,7 +121,7 @@ class MsNN():
 
 
 
-    def pca_fit(self, data, pca_model_path=None):
+    def pca_fit(self, data, pca_model_path):
 
         self.pca = PCA(n_components=self.n_components, copy=True, whiten=False)
         self.pca.fit(data)
@@ -282,25 +281,34 @@ if __name__ == '__main__':
     nn_107_02_8 = MsNN( name = '107-02-8', 
                         target = '107-02-8',
                         use_PCA = True, 
-                        n_components = 128,
-                        pca_model_path = 'pca_107_02_8.model',
-                        n_hidden_layers = [64, 64, 64], 
-                        nproc = 3)
+                        n_components = 256,
+                        pca_model_path = 'pca_107_02_8_N256.model',
+                        train_pca = True,
+                        n_hidden_layers = [256, 128, 64], 
+                        nproc = 4)
 
-    nn_107_02_8.load_model(model_path='./MSNN_19')
-    nn_107_02_8.load_pca_model('pca_107_02_8.model')
+    # nn_107_02_8.load_model(model_path='./MSNN_30')
+    # nn_107_02_8.load_pca_model('pca_107_02_8_N256.model')
 
-    nn_107_02_8.load_data( data_root_dir = 'train_data/', 
+    nn_107_02_8.load_data( data_root_dir = 'validation_data/', 
                            ratio_of_test = 0.2 )
-    print( nn_107_02_8.validate() )
 
 
-    # for i in range(10):
-    #     nn_107_02_8.train(loss_min=0, learning_rate=0.01, keep=0.6, step_max=500, model_path='./MSNN_%d'%(i))
-    #     print( nn_107_02_8.validate() )
+    i = 0
+    step_max = 100
+    while True:
+        nn_107_02_8.train(loss_min=0, 
+        	              learning_rate=0.001, 
+        	              keep=0.6, 
+        	              step_max=step_max, 
+        	              model_path='./MSNN')
+        i = i+1
+        accuracy = nn_107_02_8.validate()
+        if accuracy >= 0.8:
+        	print('Stop training at %d, accuracy=%f'%(i*step_max, accuracy))
+        	break
 
-    # nn_107_02_8.load_model(model_path='./MSNN')
-    # print( nn_107_02_8.validate() )
+
 
     
 
