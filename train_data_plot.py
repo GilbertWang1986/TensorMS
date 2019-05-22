@@ -53,13 +53,13 @@ def gaussian_smearing(spec_input, width, x_min, x_max, x_delta, peak_shift=False
     if peak_shift:
         for i in range(len(spec)):
             if spec[i][1] <= 2000:
-                if random.uniform(0.0,1.0) <= 0.25:                #shift 1 randomly discard small peaks (Int.<=1000)
+                if random.uniform(0.0,1.0) <= 0.10:                #shift 1 randomly discard small peaks (Int.<=1000)
                     spec[i][1] = 0.0
             if spec[i][1] <= 1000:
-                if random.uniform(0.0,1.0) <= 0.25:                #shift 1 randomly discard small peaks (Int.<=1000)
+                if random.uniform(0.0,1.0) <= 0.10:                #shift 1 randomly discard small peaks (Int.<=1000)
                     spec[i][1] = 0.0
             spec[i][0] = spec[i][0]+random.uniform(-0.25,  0.25)  #shift 2 peak position
-            spec[i][1] = spec[i][1]*random.uniform( 0.75,  1.25)  #shift 3 peak intensity
+            spec[i][1] = spec[i][1]*random.uniform( 0.80,  1.20)  #shift 3 peak intensity
 
     x = np.linspace(x_min, x_max, int((x_max-x_min)/x_delta))
     y = np.zeros(len(x))

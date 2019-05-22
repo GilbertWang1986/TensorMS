@@ -9,13 +9,15 @@ import numpy as np
 import tensorflow as tf
 from sklearn.decomposition import PCA
 from sklearn.externals import joblib
+import matplotlib.pylab as plt
+
 
 
 
 class MsNN():
     def __init__( self, name, target,
                   use_PCA, n_components, pca_model_path, train_pca,
-                  n_hidden_layers, nproc):
+                  n_hidden_layers):
         
         self.name = name
         self.target = target
@@ -59,11 +61,7 @@ class MsNN():
             self.saver = tf.train.Saver(max_to_keep=1000)
 
             # initiation
-            config = tf.ConfigProto( device_count={"CPU": nproc},
-                                     inter_op_parallelism_threads = 1,   
-                                     intra_op_parallelism_threads = 1,  
-                                     log_device_placement=True )  
-            self.sess = tf.Session(graph=self.graph, config=config)
+            self.sess = tf.Session(graph=self.graph)
             self.sess.run(tf.global_variables_initializer())
 
 
@@ -163,8 +161,8 @@ class MsNN():
                                                        self.keep_prob: 1.0}
                                            )
                 
-                print( '%-10d   Train Loss=%-12.6f  Test Loss=%-12.6f'
-                       %(counter, train_loss, test_loss) )
+                # print( '%-10d   Train Loss=%-12.6f  Test Loss=%-12.6f'
+                #        %(counter, train_loss, test_loss) )
             
             # stop training
             if train_loss <= loss_min:
@@ -180,7 +178,7 @@ class MsNN():
         if not model_path == None:
             self.saver.save(self.sess, model_path)
     
-        print('Training is stopped')
+        # print('Training is stopped')
         return train_stat
 
 
@@ -215,11 +213,13 @@ class MsNN():
 
 
     def predict(self, spec):
+        spec = spec.reshape(1, -1)
         spec = self.pca.transform(spec)
         predictions = self.sess.run( self.prediction, 
                                      feed_dict={ self.xs:  spec, 
                                                  self.keep_prob: 1.0 }
-                                   )        
+                                   )
+        return predictions 
 
 
 
@@ -284,11 +284,10 @@ if __name__ == '__main__':
                         n_components = 256,
                         pca_model_path = 'pca_107_02_8_N256.model',
                         train_pca = True,
-                        n_hidden_layers = [256, 128, 64], 
-                        nproc = 4)
+                        n_hidden_layers = [256, 128, 64])
 
-    # nn_107_02_8.load_model(model_path='./MSNN_30')
-    # nn_107_02_8.load_pca_model('pca_107_02_8_N256.model')
+    nn_107_02_8.load_model(model_path='./MSNN')
+    nn_107_02_8.load_pca_model('pca_107_02_8_N256.model')
 
     nn_107_02_8.load_data( data_root_dir = 'validation_data/', 
                            ratio_of_test = 0.2 )
@@ -304,6 +303,7 @@ if __name__ == '__main__':
         	              model_path='./MSNN')
         i = i+1
         accuracy = nn_107_02_8.validate()
+        print(i*step_max, accuracy)
         if accuracy >= 0.8:
         	print('Stop training at %d, accuracy=%f'%(i*step_max, accuracy))
         	break
